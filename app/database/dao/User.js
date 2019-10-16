@@ -5,7 +5,9 @@ module.exports = {
         return User.find({}, fields);
     },
     getUserByUsername(username) {
-        return User.findOne({ username });
+        return User.findOne({
+            username
+        });
     },
     getUserById(userId, fields = null) {
         return User.findById(userId, fields);
@@ -20,16 +22,22 @@ module.exports = {
     updateUser(userId, updatedUser) {
         if ('password' in updatedUser) {
             return Error('If you want to change password. Use \'changePassword\' method instead');
-        } 
+        }
         return User.findByIdAndUpdate(userId, updatedUser);
     },
     changePassword(userId, newPassword) {
-
+        return User.findByIdAndUpdate(userId, {
+            password: newPassword
+        });
     },
     addNoteToUser(userId, notesCount) {
-        return User.findByIdAndUpdate(userId, { notesCount: notesCount + 1 })
+        return User.findByIdAndUpdate(userId, {
+            notesCount: notesCount + 1
+        })
     },
     deleteNoteOfUser(userId, notesCount) {
-        return User.findByIdAndUpdate(userId, { notesCount: notesCount - 1})
+        return User.findByIdAndUpdate(userId, {
+            notesCount: notesCount - 1
+        })
     }
 };

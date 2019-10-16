@@ -1,135 +1,76 @@
 const router = require('express').Router();
 const Note = require('../../database/dao/Note');
-const User = require('../../database/dao/User');
 const checkToken = require('../middleware/checkToken');
+const responseTemplate = require('../responseTemplate');
 
 router.get('/', checkToken, async (req, res) => {
     try {
-        const { id } = req.decoded;
-        let notes = await Note.getNotes();
-        notes = notes.filter(note => { 
-            return note.userId.toString() === id;
-         });
-        res.status(200).json({
-            status: 'Success',
-            data: notes
-        })
+        const loggedUserId = req.decoded.id;
+        const notes = await Note.getNotes(loggedUserId);
+        return responseTemplate.successResponse(res, 200, notes);
     } catch (error) {
-        res.status(400).json({
-            status: 'Failed',
-            message: error.message
-        })
+        return responseTemplate.errorResponse(res, 400, error.message);
     }
 });
 
 router.get('/:id', checkToken, async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.decoded.id;
-        const note = await Note.getNoteById(id);
-        if (note.id !== userId) {
-            res.status(401).json({
-                status: 'Failed',
-                message: 'You don\'t have access'
-            });
-        }
-        res.status(200).json({
-            status: 'Success',
-            data: note
-        })
+        const noteId = req.params.id;
+        const loggedUserId = req.decoded.id;
+        await checkNoteAccess(res, noteId, loggedUserId);
+        return responseTemplate.successResponse(res, 200, note);
     } catch (error) {
-        res.status(400).json({
-            status: 'Failed',
-            message: error.message
-        })
+        return responseTemplate.errorResponse(res, 400, error.message);
     }
 });
 
 router.post('/', checkToken, async (req, res) => {
     try {
-        const { id } = req.decoded;
-        if ('userId' in req.body) {
-            const { userId  } = req.body;
-            if (userId !== id) {
-                res.status(401).json({
-                    status: 'Failed',
-                    message: 'You don\'t have access'
-                });
-            }
-            const note = await Note.addNote(req.body);
-            let user = await User.getUserById(userId);
-            user = await User.addNoteToUser(userId, user.notesCount);
-            res.status(201).json({
-                status: 'Success',
-                data: note
-            });
-        } else {
-            const note = await Note.addNote(Object.assign(req.body, { userId: id }));
-            let user = await User.getUserById(id);
-            user = await User.addNoteToUser(id, user.notesCount);
-            res.status(201).json({
-                status: 'Success',
-                data: note
-            });
-        }
+        const loggedUserId = req.decoded.id;
+        const newNote = {
+            ...req.body,
+            userId: loggedUserId
+        };
+        const note = await Note.addNote(newNote);
+        return responseTemplate.successResponse(res, 201, note);
     } catch (error) {
-        res.status(400).json({
-            status: 'Failed',
-            message: error.message
-        });
+        return responseTemplate.errorResponse(res, 400, error.message);
     }
 });
 
 router.put('/:id', checkToken, async (req, res) => {
     try {
         console.log(req.body);
-        const { id } = req.params;
-        const userId = req.decoded.id;
-        const note = await Note.getNoteById(id);
-        if (note.userId.toString() !== userId) {
-            res.status(401).json({
-                status: 'Failed',
-                message: 'You don\'t have access'
-            })
-        } else {
-            const oldNote = await Note.updateNote(id, req.body);
-            res.status(200).json({
-                status: 'Success',
-                data: oldNote
-            });
-        }
+        const noteId = req.params.id;
+        const loggedUserId = req.decoded.id;
+        await checkNoteAccess(res, noteId, loggedUserId);
+        const newNote = {
+            ...req.body
+        };
+        const oldNote = await Note.updateNote(noteId, newNote);
+        return responseTemplate.successResponse(res, 200, oldNote);
     } catch (error) {
-        res.status(400).json({
-            status: 'Failed',
-            message: error.message
-        });
+        return responseTemplate.errorResponse(res, 400, error.message);
     }
 });
 
 router.delete('/:id', checkToken, async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.decoded.id;
-        const note = await Note.getNoteById(id);
-        if (note.id !== userId) {
-            res.status(401).json({
-                status: 'Failed',
-                message: 'You don\'t have access'
-            })
-        }
-        const deletedNote = await Note.deleteNote(id);
-        let user = await User.getUserById(userId);
-        user = await User.deleteNoteOfUser(userId, user.notesCount);
-        res.status(200).json({
-            status: 'Success',
-            data: deletedNote
-        });
+        const noteId = req.params.id;
+        const loggedUserId = req.decoded.id;
+        await checkNoteAccess(res, noteId, loggedUserId);
+        const deletedNote = await Note.deleteNote(noteId);
+        return responseTemplate.successResponse(res, 200, deletedNote);
     } catch (error) {
-        res.status(400).json({
-            status: 'Failed',
-            message: error.message
-        })
+        return responseTemplate.errorResponse(res, 400, error.message);
     }
 });
 
 module.exports = router;
+
+async function checkNoteAccess(res, noteId, userId) {
+    const note = await Note.getNoteById(noteId);
+    if (note.noteId !== userId) {
+        return responseTemplate.errorResponse(res, 401, "You don't have access");
+    }
+}

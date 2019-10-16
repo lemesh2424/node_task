@@ -1,69 +1,47 @@
 const router = require('express').Router();
 const User = require('../../database/dao/User');
 const checkToken = require('../middleware/checkToken');
-const Note = require('../../database/dao/Note');
+const responseTemplate = require('../responseTemplate');
 
 router.get('/', checkToken, async (req, res) => {
     try {
-        let users = await User.getUsers('_id username notesCount');
-        res.status(200).json({
-            status: 'Success',
-            data: users
-        });
+        const users = await User.getUsers('_id username notesCount');
+        return responseTemplate.successResponse(res, 200, users);
     } catch (error) {
-        res.status(400).json({
-            status: 'Failed',
-            message: error.message
-        })
+        return responseTemplate.errorResponse(res, 400, error.message);
     }
 });
 
 router.get('/:id', checkToken, async (req, res) => {
     try {
-        const { id } = req.params;
-        const user = await User.getUserById(id, '_id username notesCount');
-        res.status(200).json({
-            status: 'Success',
-            data: user
-        })
+        const userId = req.params.id;
+        const user = await User.getUserById(userId, '_id username notesCount');
+        return responseTemplate.successResponse(res, 200, user);
     } catch (error) {
-        res.status(400).json({
-            status: 'Failed',
-            message: error.message
-        })
+        return responseTemplate.errorResponse(res, 400, error.message);
     }
 });
 
 router.put('/:id', checkToken, async (req, res) => {
     try {
-        const { id } = req.params;
-        const oldUser = await User.updateUser(id, req.body);
-        res.status(200).json({
-            status: 'Success',
-            data: oldUser
-        })
+        const updatedUser = {
+            ...req.body
+        };
+        const userId = req.params.id;
+        const oldUser = await User.updateUser(userId, updatedUser);
+        return responseTemplate.successResponse(res, 200, oldUser);
     } catch (error) {
-        console.log(error);
-        res.status(400).json({
-            status: 'Failed',
-            message: error.message
-        })
+        return responseTemplate.errorResponse(res, 400, error.message);
     }
 });
 
 router.delete('/:id', checkToken, async (req, res) => {
     try {
-        const { id } = req.params;
-        const deletedUser = await User.deleteUser(id);
-        res.status(200).json({
-            status: 'Success',
-            data: deletedUser
-        });
+        const userId = req.params.id;
+        const deletedUser = await User.deleteUser(userId);
+        return responseTemplate.successResponse(res, 200, deletedUser);
     } catch (error) {
-        res.status(400).json({
-            status: 'Failed',
-            message: error.message
-        })
+        return responseTemplate.errorResponse(res, 400, error.message);
     }
 });
 

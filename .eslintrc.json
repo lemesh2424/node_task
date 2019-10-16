@@ -1,0 +1,51 @@
+{
+    "parser": "babel-eslint",
+    "parserOptions": {
+        "ecmaFeatures": {
+            "impliedStrict": true
+        }
+    },
+    "env": {
+        "node": true,
+        "es6": true
+    },
+    "plugins": [
+        "fp"
+    ],
+    "rules": {
+        "max-lines": [
+            "warn",
+            200
+        ],
+        "max-lines-per-function": [
+            "warn",
+            20
+        ],
+        "complexity": [
+            "warn",
+            5
+        ],
+        "max-nested-callbacks": [
+            "warn",
+            2
+        ],
+        "max-depth": [
+            "warn",
+            3
+        ],
+        "fp/no-mutation": ["warn", {
+            "commonjs": true,
+            "exceptions": [{
+                "object": "req",
+                "property": "decoded"
+            }, {
+                "object": "colors",
+                "property": "methodColor"
+            }]
+        }],
+        "no-param-reassign": "warn",
+        "fp/no-mutating-methods": "warn",
+        "fp/no-let": "warn",
+        "fp/no-mutating-assign": "warn"
+    }
+}

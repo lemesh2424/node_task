@@ -8,12 +8,13 @@ const socket = io.connect('http://localhost:3000');
         editNote(note.id, note.text);
     });
     fetch('http://localhost:3000/api/notes/', {
-        headers: {
-            'authorization': localStorage.getItem('token')
-        }
-    })
+            headers: {
+                'authorization': localStorage.getItem('token')
+            }
+        })
         .then(response => response.json())
         .then(response => {
+            console.log(response);
             $('#spinner').remove();
             response.data.map(note => {
                 addNote(note);
@@ -30,16 +31,18 @@ $('#addButton').click((e) => {
         text: $('#text').val()
     };
     fetch('http://localhost:3000/api/notes', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'authorization': localStorage.getItem('token')
-        },
-        body: JSON.stringify(note)
-    })
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': localStorage.getItem('token')
+            },
+            body: JSON.stringify(note)
+        })
         .then(response => response.json())
         .then(response => {
-            socket.emit('note add', { note: response.data });
+            socket.emit('note add', {
+                note: response.data
+            });
             addNote(response.data);
             $('#addModal').modal('hide');
         })
@@ -53,16 +56,15 @@ $('#editButton').click((e) => {
         text: $('#editedText').val()
     };
     fetch(`http://localhost:3000/api/notes/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'authorization': localStorage.getItem('token')
-        },
-        body: JSON.stringify(note)
-    })
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': localStorage.getItem('token')
+            },
+            body: JSON.stringify(note)
+        })
         .then(response => response.json())
         .then(response => {
-            console.log('hello');
             editNote(id, note.text);
             socket.emit('note edit', {
                 id,
@@ -90,7 +92,7 @@ function addNote(note) {
         $('#editedText').val(note.text);
         $('#noteId').addClass(note._id);
     });
-    
+
     const deleteButton = document.createElement('button');
     deleteButton.id = 'deleteButton';
     deleteButton.classList.add('btn', 'btn-danger');
@@ -98,11 +100,11 @@ function addNote(note) {
     deleteButton.addEventListener('click', (e => {
         e.preventDefault();
         fetch(`http://localhost:3000/api/notes/${note._id}`, {
-            method: 'DELETE',
-            headers: {
-                'authorization': localStorage.getItem('token')
-            }
-        })
+                method: 'DELETE',
+                headers: {
+                    'authorization': localStorage.getItem('token')
+                }
+            })
             .then(response => response.json())
             .then(response => window.location.reload())
             .catch(err => console.error(err.response))
@@ -119,6 +121,5 @@ function addNote(note) {
 };
 
 function editNote(noteId, newText) {
-    console.log('hello');
     $(`#${noteId} p`).html(newText);
 }

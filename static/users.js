@@ -1,17 +1,18 @@
 (() => {
     fetch('http://localhost:3000/api/users/', {
-        headers: {
-            'authorization': localStorage.getItem('token')
-        }
-    })
+            headers: {
+                'authorization': localStorage.getItem('token')
+            }
+        })
         .then(response => response.json())
         .then(response => {
+            console.log(response);
             response.data.map(user => {
                 $('#spinner').remove();
                 addUser(user);
             })
         })
-        .catch(err => console.error(err.response));
+        .catch(err => console.error(err));
 
     $('h2').css('text-align', 'center');
 })();
